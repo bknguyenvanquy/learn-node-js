@@ -13,8 +13,14 @@ exports.postAddProduct = (req, res, next) => {
   const imageUrl = req.body.imageUrl;
   const price = req.body.price;
   const description = req.body.description;
-  const product = new Product(title, price, description, imageUrl, null, req.user._id);
-  product.save()
+  const product = new Product({
+    title: title, 
+    price: price, 
+    description: description, 
+    imageUrl: imageUrl,
+    userId: req.user
+  });
+  product.save() // save() come from mongoose
     .then(result => res.redirect('/admin/products'))
     .catch(err => console.log(err));
 };
@@ -49,8 +55,7 @@ exports.postEditProduct = (req, res, next) => {
   const updatedPrice = req.body.price;
   const updatedImageUrl = req.body.imageUrl;
   const updatedDesc = req.body.description;
-  // can use Product.update
-  // Product.findByPk(prodId)
+  // Product.findById(prodId)
   // .then(product => {
   //   product.title = updatedTitle;
   //   product.price = updatedPrice;
@@ -60,14 +65,19 @@ exports.postEditProduct = (req, res, next) => {
   // })
   // .then(result => res.redirect('/admin/products'))
   // .catch(err => console.log(err));
-  const product = new Product(updatedTitle, updatedPrice, updatedDesc, updatedImageUrl, prodId);
-  product.save()
-    .then(result => res.redirect('/admin/products'))
-    .catch(err => console.log(err));
+
+  Product.findByIdAndUpdate(prodId, {
+    title: updatedTitle,
+    price: updatedPrice,
+    imageUrl: updatedImageUrl,
+    description: updatedDesc
+  })
+  .then(result => res.redirect('/admin/products'))
+  .catch(err => console.log(err));
 };
 
 exports.getProducts = (req, res, next) => {
-  Product.fetchAll()
+  Product.find()
     .then(products => {
       res.render('admin/products', {
         prods: products,
@@ -80,7 +90,7 @@ exports.getProducts = (req, res, next) => {
 
 exports.postDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId;
-  Product.deleteById(prodId)
+  Product.findByIdAndRemove(prodId)
     .then(result => res.redirect('/admin/products'))
     .catch(err => console.log(err));
 };
